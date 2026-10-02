@@ -1,0 +1,22 @@
+# Public repository uses an allowlist. All local data is private by default.
+/*
+!/.gitignore
+!/README.md
+!/Makefile
+!/go.mod
+!/go.sum
+!/config.example.toml
+!/cmd/
+/cmd/**
+!/cmd/**/
+!/cmd/**/*.go
+!/internal/
+/internal/**
+!/internal/**/
+!/internal/**/*.go
+!/docs/
+/docs/*
+!/docs/index.html
+!/docs/privacy.html
+!/docs/terms.html
+!/docs/.nojekyll

@@ -1,0 +1,22 @@
+# Copy to study_data.local.toml. Replace placeholders only in the local copy.
+[paths]
+state_dir = ".study_state"
+credential_helper = ".study_state/bin/study-keychain"
+
+[gmail]
+account = "student@example.com"
+oauth_client_json = ".study_state/credentials/gmail-oauth-client.json"
+queries = ["from:teacher@example.edu"]
+max_messages_per_sync = 100
+
+# Configure Telegram only when both account identity and chat IDs are known.
+[telegram]
+expected_username = ""
+expected_user_id = 0
+chats = []
+
+[smart_lms]
+courses = []
+
+[netology]
+courses = []

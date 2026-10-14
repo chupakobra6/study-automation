@@ -2,6 +2,8 @@ module github.com/chupakobra6/study-automation
 
 go 1.27
 
+toolchain go1.27.2
+
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/emersion/go-imap/v2 v2.0.0-beta.8

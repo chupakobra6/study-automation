@@ -35,13 +35,14 @@ type link struct {
 }
 
 type item struct {
-	Kind     string `json:"kind"`
-	URL      string `json:"url"`
-	Title    string `json:"title"`
-	Subject  string `json:"subject"`
-	Deadline string `json:"deadline"`
-	Body     string `json:"body"`
-	Links    []link `json:"links"`
+	Kind               string `json:"kind"`
+	URL                string `json:"url"`
+	Title              string `json:"title"`
+	Subject            string `json:"subject"`
+	Deadline           string `json:"deadline"`
+	Body               string `json:"body"`
+	Links              []link `json:"links"`
+	DescriptionMissing bool   `json:"description_missing,omitempty"`
 }
 
 type export struct {
@@ -221,6 +222,9 @@ func validateExport(current export, subjects []string) error {
 	seen = map[string]bool{}
 	tasks, materials := 0, 0
 	for _, item := range current.Items {
+		if item.DescriptionMissing && item.Kind != "task" {
+			return errors.New("club404 missing description is only valid for a task card")
+		}
 		if !allowed[item.Subject] || item.Title == "" || item.Body == "" || seen[item.URL] || (item.Kind != "task" && item.Kind != "material") {
 			return errors.New("club404 scan contains an invalid item")
 		}
@@ -246,6 +250,9 @@ func renderItem(item item) string {
 	fmt.Fprintf(&b, "# %s\n\nSource: secondary club404\nSubject: %s\nKind: %s\nURL: %s\n", item.Title, item.Subject, item.Kind, item.URL)
 	if item.Deadline != "" {
 		fmt.Fprintf(&b, "Displayed deadline: %s\n", item.Deadline)
+	}
+	if item.DescriptionMissing {
+		fmt.Fprintln(&b, "Description missing: only the visible task card header is available; assignment requirements are unknown.")
 	}
 	if strings.Contains(strings.ToLower(item.Body), "произвольная дата") || strings.Contains(strings.ToLower(item.Body), "точного дедлайна пока что нет") {
 		fmt.Fprintln(&b, "Deadline warning: club404 says its displayed date is arbitrary; do not use it as a due date.")

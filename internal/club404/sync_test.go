@@ -121,3 +121,24 @@ func TestCountdownDoesNotChangeItemDigest(t *testing.T) {
 		t.Fatal("real content change was hidden")
 	}
 }
+
+func TestTaskWithoutDescriptionKeepsEvidenceGap(t *testing.T) {
+	value := item{Kind: "task", Title: "Agree a topic", Subject: "net", URL: "https://club404.ru/course/2/tasks/1200", Body: "Agree a topic\nDeadline 10 November", DescriptionMissing: true}
+	current := export{Version: 1, BaseURL: "https://club404.ru", Subjects: []string{"net"}, Items: []item{value}}
+	current.Counts.Subjects, current.Counts.Tasks = 1, 1
+	if err := validateExport(current, []string{"net"}); err != nil {
+		t.Fatal(err)
+	}
+	if evidence := renderItem(value); !strings.Contains(evidence, "assignment requirements are unknown") || !strings.Contains(evidence, value.Body) {
+		t.Fatalf("description gap or source header was lost: %s", evidence)
+	}
+	withDescription := value
+	withDescription.DescriptionMissing = false
+	if digest(withDescription) == digest(value) {
+		t.Fatal("a recovered description did not change the source identity")
+	}
+	current.Items[0].Kind = "material"
+	if err := validateExport(current, []string{"net"}); err == nil {
+		t.Fatal("missing material body accepted")
+	}
+}

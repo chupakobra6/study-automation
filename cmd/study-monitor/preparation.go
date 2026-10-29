@@ -89,6 +89,9 @@ func decisionSpecs(batch reviewBatch) []reviewDecision {
 	for _, item := range batch.Coverage.UserDecisions {
 		result = append(result, reviewDecision{Kind: "decision", Key: item.TaskID})
 	}
+	for _, item := range batch.Coverage.LinkedDocuments {
+		result = append(result, reviewDecision{Kind: "reference", Key: item.URL})
+	}
 	for _, key := range batch.Coverage.DueTaskIDs {
 		result = append(result, reviewDecision{Kind: "due", Key: key})
 	}
@@ -238,6 +241,16 @@ func validatePreparedReview(queueDir, receipt string, board taskBoard, now time.
 	}
 	if blockedCoverage && !blockedEvent {
 		return validationResult{}, errors.New("blocked source coverage requires a blocked event")
+	}
+	for _, reference := range input.Batch.Coverage.LinkedDocuments {
+		if decisions[decisionKey("reference", reference.URL)].Outcome != "blocked" {
+			continue
+		}
+		for _, source := range reference.Sources {
+			if decisions[decisionKey("event", source.EventID)].Outcome != "blocked" {
+				return validationResult{}, fmt.Errorf("blocked reference %s requires its owning event %s to be blocked", reference.URL, source.EventID)
+			}
+		}
 	}
 	groups := evidenceSpecs(input.Files)
 	if len(draft.Evidence) != len(groups) {

@@ -81,10 +81,11 @@ type coverageDecision struct {
 }
 
 type coverageManifest struct {
-	Topics        []coverageTopic    `json:"subjects_or_topics"`
-	Deadlines     []string           `json:"deadlines"`
-	UserDecisions []coverageDecision `json:"user_decisions"`
-	DueTaskIDs    []string           `json:"due_task_ids"`
+	Topics          []coverageTopic    `json:"subjects_or_topics"`
+	Deadlines       []string           `json:"deadlines"`
+	UserDecisions   []coverageDecision `json:"user_decisions"`
+	DueTaskIDs      []string           `json:"due_task_ids"`
+	LinkedDocuments []linkedDocument   `json:"linked_documents"`
 }
 
 type reviewItem struct {
@@ -359,6 +360,7 @@ func buildReviewBatch(items []queue.Item, remaining int, board taskBoard, due []
 		Coverage: coverageManifest{Topics: []coverageTopic{}, Deadlines: []string{}, UserDecisions: []coverageDecision{}, DueTaskIDs: []string{}},
 	}
 	evidence := map[string]bool{}
+	linkedDocuments := map[string]*linkedDocument{}
 	var reports strings.Builder
 	for _, item := range items {
 		batch.Items = append(batch.Items, reviewItem{
@@ -371,6 +373,9 @@ func buildReviewBatch(items []queue.Item, remaining int, board taskBoard, due []
 		}
 		reports.Write(body)
 		reports.WriteByte('\n')
+		if item.Source == "telegram" {
+			collectLinkedDocuments(linkedDocuments, item.ID, string(body))
+		}
 		for _, path := range item.RequiredEvidence {
 			evidence[filepath.Clean(path)] = true
 		}
@@ -380,6 +385,7 @@ func buildReviewBatch(items []queue.Item, remaining int, board taskBoard, due []
 	}
 	sort.Strings(batch.RequiredEvidence)
 	batch.Coverage = detectCoverage(reports.String(), board, due)
+	batch.Coverage.LinkedDocuments = sortedLinkedDocuments(linkedDocuments)
 	return batch, nil
 }
 
